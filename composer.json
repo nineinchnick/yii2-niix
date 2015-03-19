@@ -1,0 +1,19 @@
+{
+    "name": "nineinchnick/yii2-niix",
+    "description": "Base classes and tools providing a full CRUD interface. Contains model and controller generators.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jan Waś",
+            "email": "janek.jan@gmail.com",
+            "homepage": "http://niix.pl/"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "*"
+    },
+    "require-dev": {
+        "phpunit": "dev-master"
+    }
+}
