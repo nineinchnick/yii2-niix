@@ -1,6 +1,8 @@
 {
     "name": "nineinchnick/yii2-niix",
+    "type": "yii2-extension",
     "description": "Base classes and tools providing a full CRUD interface. Contains model and controller generators.",
+    "keywords": ["yii2", "niix", "crud", "gii"],
     "license": "MIT",
     "authors": [
         {
