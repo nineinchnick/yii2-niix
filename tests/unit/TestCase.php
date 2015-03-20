@@ -16,7 +16,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     /**
      * @var Connection
      */
-    private $_db;
+    private $dbConnection;
 
     protected function setUp()
     {
@@ -28,12 +28,15 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         if (!extension_loaded('pdo') || !extension_loaded($pdo_database)) {
             $this->markTestSkipped('pdo and '.$pdo_database.' extension are required.');
         }
+        $this->mockApplication();
     }
 
     protected function tearDown()
     {
-        if ($this->_db) {
-            $this->_db->close();
+        parent::tearDown();
+        $this->destroyApplication();
+        if ($this->dbConnection) {
+            $this->dbConnection->close();
         }
     }
 
@@ -53,14 +56,40 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Populates Yii::$app with a new application
+     * The application will be destroyed on tearDown() automatically.
+     * @param array $config The application configuration, if needed
+     * @param string $appClass name of the application class to create
+     */
+    protected function mockApplication($config = [], $appClass = '\yii\console\Application')
+    {
+        new $appClass(ArrayHelper::merge([
+            'id' => 'testapp',
+            'basePath' => __DIR__,
+            'vendorPath' => dirname(dirname(__DIR__)),
+            'components' => [
+                'db' => $this->getConnection(),
+            ],
+        ], $config));
+    }
+
+    /**
+     * Destroys application in Yii::$app by setting it to null.
+     */
+    protected function destroyApplication()
+    {
+        \Yii::$app = null;
+    }
+
+    /**
      * @param  boolean $reset whether to clean up the test database
      * @param  boolean $open  whether to open and populate test database
      * @return \yii\db\Connection
      */
     public function getConnection($reset = true, $open = true)
     {
-        if (!$reset && $this->_db) {
-            return $this->_db;
+        if (!$reset && $this->dbConnection) {
+            return $this->dbConnection;
         }
         $config = $this->database;
         if (isset($config['fixture'])) {
@@ -70,11 +99,11 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             $fixture = null;
         }
         try {
-            $this->_db = $this->prepareDatabase($config, $fixture, $open);
+            $this->dbConnection = $this->prepareDatabase($config, $fixture, $open);
         } catch (\Exception $e) {
             $this->markTestSkipped("Something wrong when preparing database: " . $e->getMessage());
         }
-        return $this->_db;
+        return $this->dbConnection;
     }
 
     public function prepareDatabase($config, $fixture, $open = true)
@@ -83,19 +112,19 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             $config['class'] = 'yii\db\Connection';
         }
         /* @var $db \yii\db\Connection */
-        $db = \Yii::createObject($config);
+        $dbConnection = \Yii::createObject($config);
         if (!$open) {
-            return $db;
+            return $dbConnection;
         }
-        $db->open();
+        $dbConnection->open();
         if ($fixture !== null) {
             $lines = explode(';', file_get_contents($fixture));
             foreach ($lines as $line) {
                 if (trim($line) !== '') {
-                    $db->pdo->exec($line);
+                    $dbConnection->pdo->exec($line);
                 }
             }
         }
-        return $db;
+        return $dbConnection;
     }
 }
